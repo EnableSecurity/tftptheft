@@ -1,4 +1,7 @@
-TFTP Theft is a tool which allows one to quickly scan/bruteforce 
-a tftp server for files and download them instantly.
+TFTP Theft is a tool which allows one to quickly scan/bruteforce a tftp server
+for files and download them instantly.
+
+thief.py - downloads files based on a pattern or list of files
+
 
 Author: sandro gauci
