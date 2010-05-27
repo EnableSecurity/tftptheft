@@ -103,7 +103,7 @@ def getargs():
     usage += "examples:\r\n"
     usage += "%prog 10.0.0.1\r\n"
     usage += "%prog -p6969  10.0.0.1\r\n"
-    parser = OptionParser(usage, version="%prog v"+str(__version__)+DESC+__GPL__)
+    parser = OptionParser(usage, version="%prog v"+str(__version__)+DESC+__LICENSE__)
     parser.add_option('-p',"--port", dest="port", default=69, type="int",
                       help="Destination port")
     parser.add_option('--range','-r', dest="range",

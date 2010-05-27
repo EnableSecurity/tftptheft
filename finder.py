@@ -27,7 +27,7 @@ def getargs():
     usage += "examples:\r\n"
     usage += "%prog 10.0.0.1/18 192.168.2.1/24\r\n"
     usage += "%prog -p6969  10.0.0.1/24\r\n"
-    parser = OptionParser(usage, version="%prog v"+str(__version__)+DESC+__GPL__)
+    parser = OptionParser(usage, version="%prog v"+str(__version__)+DESC+__LICENSE__)
     parser.add_option("--port", '-p', dest="port", default=69, type="int",
                       help="Destination port")
     (options, args) = parser.parse_args()
