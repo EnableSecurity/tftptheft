@@ -11,7 +11,7 @@ from lib.tftplib import tftp, tftpstruct
 from lib.iphelper import ip4range
 import random
 import os
-from lib.common import __GPL__, __version__
+from lib.common import __LICENSE__, __version__
 from time import sleep
 import logging
 from optparse import OptionParser

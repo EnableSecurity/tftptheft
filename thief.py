@@ -13,7 +13,7 @@ import sys
 import datetime
 from lib.tftplib import tftp, tftpstruct
 from lib.bruteforcehelper import anotherxrange, getRange
-from lib.common import __GPL__, __version__
+from lib.common import __LICENSE__, __version__
 import lib.construct
 
 DESC =    """
