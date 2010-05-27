@@ -14,17 +14,17 @@ import datetime
 from lib.tftplib import tftp, tftpstruct
 from lib.bruteforcehelper import anotherxrange, getRange
 from lib.common import __GPL__, __version__
+import lib.construct
 
 DESC =    """
 
    Thief.py downloads files from a tftp server quickly and efficiently
    """
 
+
 def gen_range(template,myranges):
     for myrange in myranges:
-        startrange = myrange[0]
-        endrange = myrange[1]
-        for i in anotherxrange(startrange,endrange):
+        for i in myrange:
             outstr = template % i
             yield(outstr)
 
@@ -76,8 +76,8 @@ def dumpnassemble(dumpfiles,sportmap,dstdir,partialdump=True):
     files = assemblefiles(dumpfiles,sportmap)
     donefiles = list()
     for (fn,done) in files:
-        if not os.path.exists(options.dstdir):
-            os.mkdir(options.dstdir)
+        if not os.path.exists(dstdir):
+            os.mkdir(dstdir)
         data=files[(fn,done)]
         f=open(os.path.join(dstdir,fn),'wb')
         f.write(data)
@@ -101,15 +101,16 @@ class mylist:
 def getargs():
     usage = "usage: %prog [options] target\r\n"
     usage += "examples:\r\n"
-    usage += "%prog 10.0.0.1"
+    usage += "%prog 10.0.0.1\r\n"
     usage += "%prog -p6969  10.0.0.1\r\n"
     parser = OptionParser(usage, version="%prog v"+str(__version__)+DESC+__GPL__)
-    parser.add_option("--port", dest="port", default=69, type="int",
+    parser.add_option('-p',"--port", dest="port", default=69, type="int",
                       help="Destination port")
     parser.add_option('--range','-r', dest="range",
                       help="Range of hex (default) or numeric filenames")
     parser.add_option('--rangetype','-T', dest="rangetype", default="hex",
-                      help="Range of hex (default) or numeric filenames")
+                      type="choice", choices=["hex","num"],
+                      help="Range of hex (default, useful for mac addresses) or num for numeric filenames")
     parser.add_option('--fntemplate',dest="fntemplate", default="SEP%09X.cnf.xml",
                       help="""When the --range option is used, by default it produces
                       filenames for SCCP configuration files using the template
@@ -127,7 +128,7 @@ def getargs():
     
 def main():
     log = logging.getLogger(__name__)
-    log.setLevel(logging.DEBUG)
+    log.setLevel(logging.INFO)
     options,args = getargs()
     dst = (args[0],int(options.port))
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -136,7 +137,7 @@ def main():
     mydirtysocks.append(s)
     t = tftp()
     if options.range:
-        ranges = getRange(options.range)
+        ranges = getRange(options.range,rangetype=options.rangetype)
         filelist = gen_range(options.fntemplate, ranges)
     else:
         filelist = gen_tftpfilelist(options.filenamesfile)
@@ -158,17 +159,24 @@ def main():
         if len(r) > 0:        
             for s in r:
                 recv = s.recvfrom(1024)
+                log.debug('Recv: %s' % `recv`)
                 lastrecv = time()
                 buff = recv[0]
                 ipaddr = recv[1]
-                response = tftpstruct.parse(buff)        
+                try:
+                    response = tftpstruct.parse(buff)
+                except lib.construct.core.RangeError:
+                    response = None
+                if response is None:
+                    log.warn('Error parsing response')
+                    continue
                 if response.operation == 'ERROR':
                     if response.data.errorcode == 'FileNotFound':
                         pass
                     else:
                         log.debug(str(response))
                         log.warn( "Time for a siesta.. I think the tftp can't keep up")
-                        sleep(10)
+                        sleep(2)
                 elif response.operation == 'DATA':
                     addresses = (ipaddr,s.getsockname())
                     if addresses not in dumpfiles:
@@ -185,7 +193,7 @@ def main():
                 finito = True
             if len(ackbucket) > 0:
                 block,datadst,s = ackbucket.pop(-1)
-                data = t.makeack(block)
+                data = t.makeack(block)                
                 s.sendto(data,datadst)
             elif finito:
                 break
@@ -196,6 +204,7 @@ def main():
                     finito = True
                     continue
                 data = t.makerrq(fn)
+                log.debug('asking for %s' % fn)
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 s.settimeout(5)
                 s.sendto(data,dst)
@@ -210,7 +219,7 @@ def main():
     dumpfiles,files = dumpnassemble(dumpfiles,sportmap,options.dstdir,partialdump=True)
     for fn in files:
         log.info( "pos 2 Dumped %s" % fn)
-    log.info( "Total time: %s" % datetime.datetime.now() - start_time )
+    log.info( "Total time: %s" % (datetime.datetime.now() - start_time) )
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

@@ -28,7 +28,7 @@ def getargs():
     usage += "%prog 10.0.0.1/18 192.168.2.1/24\r\n"
     usage += "%prog -p6969  10.0.0.1/24\r\n"
     parser = OptionParser(usage, version="%prog v"+str(__version__)+DESC+__GPL__)
-    parser.add_option("--port", dest="port", default=69, type="int",
+    parser.add_option("--port", '-p', dest="port", default=69, type="int",
                       help="Destination port")
     (options, args) = parser.parse_args()
     if len(args) == 0:
@@ -37,6 +37,7 @@ def getargs():
 
 def main():
     log = logging.getLogger(__name__)
+    log.setLevel(logging.INFO)
     options,args = getargs()
     ipranges = ip4range(*args)
     port = options.port
@@ -63,7 +64,7 @@ def main():
                     response = tftpstruct.parse(buff)
                 except Exception,e:
                     print e
-                log.info("IP: %s responded: %s" % (ipaddr,response))
+                log.info("IP: %s:%s responded: %s" % (ipaddr[0],ipaddr[1],response))
         else:
             if finito:
                 break
@@ -73,9 +74,15 @@ def main():
                 except StopIteration:
                     finito = True
                     continue
-                s.sendto(data,dst)
+                try:
+                    log.debug('sending to %s:%s' % dst)
+                    s.sendto(data,dst)
+                except socket.error, err:
+                    log.warn('Socket error: %s %s' % (dst,err))
+                    
     
-    print datetime.datetime.now() - start_time
+    log.info("Duration: %s" %  (datetime.datetime.now() - start_time))
 
 if __name__ == "__main__":
+    logging.basicConfig()
     main()

@@ -7,13 +7,16 @@ def calcgenerator(gen):
     return i
 
 
-def getRange(rangestr):
+def getRange(rangestr,rangetype='num'):
     xrange = anotherxrange
+    assert rangetype in ['num','hex']
     _tmp1 = rangestr.split(',')
     numericrange = list()
     for _tmp2 in _tmp1:
         _tmp3 = _tmp2.split('-',1)
-        if len(_tmp3) > 1:        
+        if rangetype == 'hex':
+            _tmp3 = map(lambda x: str(int(x,16)), _tmp3)
+        if len(_tmp3) > 1:
             if not (_tmp3[0].isdigit() or _tmp3[1].isdigit()):                
                 raise ValueError, "the ranges need to be digits"
                 return            

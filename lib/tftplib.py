@@ -51,7 +51,10 @@ class tftp:
         pass
     
     def parse(self,buff=None):
-        tftpstruct.parse(buff)
+      try:
+         return tftpstruct.parse(buff)
+      except lib.construct.core.RangeError:
+         pass
     
     def makerrq(self,filename,mode='octet'):
         rrq = Container()
