@@ -24,7 +24,7 @@ DESC =    """
 
 def gen_range(template,myranges):
     for myrange in myranges:
-        for i in myrange:
+        for i in myrange:            
             outstr = template % i
             yield(outstr)
 
@@ -111,25 +111,54 @@ def getargs():
     parser.add_option('--rangetype','-T', dest="rangetype", default="hex",
                       type="choice", choices=["hex","num"],
                       help="Range of hex (default, useful for mac addresses) or num for numeric filenames")
-    parser.add_option('--fntemplate',dest="fntemplate", default="SEP%09X.cnf.xml",
+    parser.add_option('--fntemplate',dest="fntemplate", default="SEP%012X.cnf.xml",
                       help="""When the --range option is used, by default it produces
                       filenames for SCCP configuration files using the template
-                      SEP%09X.cnf.xml. You can modify this to reflect any template""")
+                      SEP%012X.cnf.xml. You can modify this to reflect any template or
+                      specify a template set in fntemplates.txt""")
     parser.add_option('--file','-f', dest="filenamesfile",
                       default=os.path.join('data','tftplist.txt'),
                       help="File containing a list of files to download")
     parser.add_option('-o','--output',dest="dstdir", default="download",
                       help="Output directory where the files will be downloaded")
+    parser.add_option('--listtemplates','-l', dest="listtemplates",
+                      default=False, action="store_true",
+                      help="List known templates")
     (options, args) = parser.parse_args()
     if len(args) != 1:
         parser.error("Please pass just one destination tftp server name")
     return (options, args)
 
+def getfntemplate(fntemplate):
+    import csv
+    res = fntemplate
+    f=open(os.path.join('data','fntemplates.txt'),'r')
+    reader=csv.reader(f,delimiter=":")
+    for row in reader:
+        if row[0] == fntemplate:
+            res = row[1]
+            break
+    f.close()
+    return res
+
+def listtemplates():
+    f=open(os.path.join('data','fntemplates.txt'),'r')
+    reader=csv.reader(f,delimiter=":")
+    res = list()
+    for row in reader:
+        if row[0] == fntemplate:
+            res.append(row[0])
+            break
+    f.close()
+    return res
+    
     
 def main():
     log = logging.getLogger(__name__)
     log.setLevel(logging.INFO)
     options,args = getargs()
+    if options.listtemplates:
+        print listtemplates()
     dst = (args[0],int(options.port))
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(5)
@@ -138,7 +167,13 @@ def main():
     t = tftp()
     if options.range:
         ranges = getRange(options.range,rangetype=options.rangetype)
-        filelist = gen_range(options.fntemplate, ranges)
+        fntemplate = getfntemplate(options.fntemplate)
+        try:
+            fntemplate % 100
+        except TypeError:
+            log.critical('The template specified is not a valid one or not found')
+            return
+        filelist = gen_range(fntemplate, ranges)
     else:
         filelist = gen_tftpfilelist(options.filenamesfile)
     dumpfiles = dict()
