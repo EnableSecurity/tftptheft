@@ -7,13 +7,14 @@ import os
 from time import sleep, time
 from optparse import OptionParser
 import logging
+import logging.handlers
 import socket
 import select 
 import sys
 import datetime
 from lib.tftplib import tftp, tftpstruct
 from lib.bruteforcehelper import anotherxrange, getRange
-from lib.common import __LICENSE__, __version__
+from lib.common import __LICENSE__, __version__, calcloglevel
 import lib.construct
 
 DESC =    """
@@ -99,11 +100,12 @@ class mylist:
         self.list.append(data)
 
 def getargs():
+    global parser
     usage = "usage: %prog [options] target\r\n"
     usage += "examples:\r\n"
     usage += "%prog 10.0.0.1\r\n"
     usage += "%prog -p6969  10.0.0.1\r\n"
-    parser = OptionParser(usage, version="%prog v"+str(__version__)+DESC+__LICENSE__)
+    parser = OptionParser(usage, version="%prog v"+str(__version__)+DESC+__LICENSE__)    
     parser.add_option('-p',"--port", dest="port", default=69, type="int",
                       help="Destination port")
     parser.add_option('--range','-r', dest="range",
@@ -124,9 +126,15 @@ def getargs():
     parser.add_option('--listtemplates','-l', dest="listtemplates",
                       default=False, action="store_true",
                       help="List known templates")
+    parser.add_option('--verbose','-v', dest="verbose",
+                      action="count",
+                      help="Increase verbosity")
+    parser.add_option('--quiet','-q', dest="quiet",
+                      default=False, action="store_true",
+                      help="Sssh! quiet mode")
+    parser.add_option('--debug',default=False, action="store_true",
+                      help="Enable debug mode and log to debug.log")
     (options, args) = parser.parse_args()
-    if len(args) != 1:
-        parser.error("Please pass just one destination tftp server name")
     return (options, args)
 
 def getfntemplate(fntemplate):
@@ -142,13 +150,13 @@ def getfntemplate(fntemplate):
     return res
 
 def listtemplates():
+    import csv
     f=open(os.path.join('data','fntemplates.txt'),'r')
     reader=csv.reader(f,delimiter=":")
     res = list()
     for row in reader:
-        if row[0] == fntemplate:
+        if len(row) == 2:
             res.append(row[0])
-            break
     f.close()
     return res
     
@@ -157,8 +165,17 @@ def main():
     log = logging.getLogger(__name__)
     log.setLevel(logging.INFO)
     options,args = getargs()
+    log.setLevel(calcloglevel(options))
     if options.listtemplates:
-        print listtemplates()
+        print "Templates available:"
+        print "\r\n".join(listtemplates())
+        sys.exit()
+    if len(args) != 1:
+        parser.error("Please pass just one destination tftp server name")
+    if options.debug:
+        log.setLevel(logging.DEBUG)
+        debughandler = logging.handlers.WatchedFileHandler('debug.log')
+        log.addHandler(debughandler)
     dst = (args[0],int(options.port))
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(5)
@@ -242,6 +259,7 @@ def main():
                 log.debug('asking for %s' % fn)
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 s.settimeout(5)
+                log.debug('sending %s' % `data`)
                 s.sendto(data,dst)
                 mydirtysocks.append(s)        
                 saddr,sport = s.getsockname()
