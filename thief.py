@@ -15,7 +15,9 @@ import datetime
 from lib.tftplib import tftp, tftpstruct
 from lib.bruteforcehelper import anotherxrange, getRange
 from lib.common import __LICENSE__, __version__, calcloglevel
-import lib.construct
+import lib.contrib.construct
+from lib.contrib.progressbar import progressbar
+
 
 DESC =    """
 
@@ -191,8 +193,10 @@ def main():
             log.critical('The template specified is not a valid one or not found')
             return
         filelist = gen_range(fntemplate, ranges)
+        filelist2 = gen_range(fntemplate, ranges)
     else:
         filelist = gen_tftpfilelist(options.filenamesfile)
+        filelist2 = gen_tftpfilelist(options.filenamesfile)
     dumpfiles = dict()
     ackbucket = list()
     sportmap = dict()
@@ -203,6 +207,14 @@ def main():
     maxlastrecv = 5
     if not os.path.exists(options.dstdir):
         os.mkdir(options.dstdir)
+    if not options.quiet:
+        widgets = ['Test: ', progressbar.Percentage(), ' ', progressbar.Bar(marker=progressbar.RotatingMarker()),
+                   ' ', progressbar.ETA(), ' ']
+        filelistlen = 0 
+        for _tmp in filelist2:
+            filelistlen += 1
+        fnno = 0
+        pbar = progressbar.ProgressBar(widgets=widgets, maxval=filelistlen).start()
     while 1:
         socklists = list()
         socklists.extend(mydirtysocks.list)
@@ -217,7 +229,7 @@ def main():
                 ipaddr = recv[1]
                 try:
                     response = tftpstruct.parse(buff)
-                except lib.construct.core.RangeError:
+                except lib.contrib.construct.core.RangeError:
                     response = None
                 if response is None:
                     log.warn('Error parsing response')
@@ -251,7 +263,10 @@ def main():
                 break
             if not finito:
                 try:
-                    fn = filelist.next()
+                    fn = filelist.next()                    
+                    if not options.quiet:
+                        fnno += 1
+                        pbar.update(fnno)
                 except StopIteration:
                     finito = True
                     continue

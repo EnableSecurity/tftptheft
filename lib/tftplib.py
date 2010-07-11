@@ -1,8 +1,8 @@
 """
 the Trivial FTP protocol
 """
-from construct import *
-from construct.text import *
+from contrib.construct import *
+from contrib.construct.text import *
 
 op_code = Enum(UBInt16("operation"),
                RRQ = 1,
