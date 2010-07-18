@@ -78,3 +78,7 @@ uip200_463enc.pac
 uniden00e011030397.txt
 unidencom.txt
 XMLDefault.cnf.xml
+debian.cfg
+boot.txt
+pxelinux.0
+pxelinux.cfg/default
