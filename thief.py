@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# copyrighted by sandrogauci <sandro@enablesecurity.com> 2010
+#!/usr/bin/env python 
+# copyrighted by sandrogauci <sandro@enablesecurity.com> 2010-2011
 # 
 
 import random

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# copyrighted by sandrogauci <sandro@enablesecurity.com> 2010
+# copyrighted by sandrogauci <sandro@enablesecurity.com> 2011
 # 
 
 import socket
