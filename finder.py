@@ -30,6 +30,8 @@ def getargs():
     parser = OptionParser(usage, version="%prog v"+str(__version__)+DESC+__LICENSE__)
     parser.add_option("--port", '-p', dest="port", default=69, type="int",
                       help="Destination port")
+    parser.add_option("--filename", '-f', dest="filename",
+                      help="filename to use in the GET msg")
     (options, args) = parser.parse_args()
     if len(args) == 0:
         parser.error("Please pass some ip ranges")
@@ -41,7 +43,10 @@ def main():
     options,args = getargs()
     ipranges = ip4range(*args)
     port = options.port
-    fn = str(random.randrange(1000,9999)) + '.xml'
+    if options.filename:
+        fn = options.filename
+    else:
+        fn = str(random.randrange(1000,9999)) + '.xml'
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     s.settimeout(5)

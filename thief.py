@@ -252,8 +252,6 @@ def main():
                     ackbucket.append([response.data.block,ipaddr,s])            
         else:
             if time() - lastrecv > maxlastrecv:
-                log.error('Did not receive a response for %s seconds, quitting' \
-                          % (time()-lastrecv))
                 finito = True
             if len(ackbucket) > 0:
                 block,datadst,s = ackbucket.pop(-1)
@@ -283,7 +281,9 @@ def main():
                 dumpfiles,files = dumpnassemble(dumpfiles,sportmap,options.dstdir,partialdump=False)
                 for fn in files:
                     log.info("Dumped %s" % fn)
-    
+    if (time() - lastrecv > maxlastrecv) or len(dumpfiles.keys()) == 0:
+        log.error('Did not receive a response after %s seconds, quitting' \
+                  % (time()-lastrecv))        
     dumpfiles,files = dumpnassemble(dumpfiles,sportmap,options.dstdir,partialdump=True)
     for fn in files:
         log.info( "pos 2 Dumped %s" % fn)
