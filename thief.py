@@ -235,7 +235,8 @@ def main():
                     log.warn('Error parsing response')
                     continue
                 if response.operation == 'ERROR':
-                    if response.data.errorcode == 'FileNotFound':
+                    if (response.data.errorcode == 'FileNotFound' or
+						response.data.ErrMsg == 'No such file or directory'):
                         pass
                     else:
                         log.debug(str(response))
