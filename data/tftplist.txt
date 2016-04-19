@@ -55,6 +55,7 @@ s20d01b2_2.bin
 SEP000F34118045.cnf
 SEP001562EA69E8.cnf
 SEPDefault.cnf
+SPDefault.cnf.xml
 SIP000F34118045.cnf
 SIPinsertMAChere.cnf
 SIP000F34118045.cnf
